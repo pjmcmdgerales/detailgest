@@ -11,73 +11,7 @@
 <header><a class="brand" href="./index.html"><span class="mark">///</span> Detail<span class="green">Gest</span></a></header>
 <main><section class="card" aria-labelledby="heading"><h1 id="heading">Acessar plataforma</h1><p>Entre com sua conta para acessar seu ambiente de gestão.</p><form id="login-form"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" placeholder="seuemail@exemplo.com" required><label for="password">Senha</label><div class="password"><input id="password" type="password" autocomplete="current-password" placeholder="Digite sua senha" required><button class="toggle" type="button" id="toggle">Mostrar</button></div><button class="submit" id="submit" type="submit">Entrar na plataforma</button><div class="msg" id="message" role="status" aria-live="polite"></div></form><div class="hint">O acesso é exclusivo para contas autorizadas.</div></section></main>
 <div class="footer">© DetailGest · Gestão para Estética Automotiva</div>
-<script type="module">
-import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
-
-const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-
-const form=document.getElementById('login-form');
-const message=document.getElementById('message');
-const submit=document.getElementById('submit');
-
-document.getElementById('toggle').addEventListener('click',()=>{
-    const input=document.getElementById('password');
-    const show=input.type==='password';
-    input.type=show?'text':'password';
-    document.getElementById('toggle').textContent=show?'Ocultar':'Mostrar';
-});
-
-form.addEventListener('submit',async e=>{
-    e.preventDefault();
-
-    submit.disabled=true;
-    message.textContent='Verificando credenciais...';
-
-    try {
-        const {data,error}=await sb.auth.signInWithPassword({
-            email:document.getElementById('email').value.trim(),
-            password:document.getElementById('password').value
-        });
-
-        if(error) throw error;
-
-        const {data:profile,error:profileError}=await sb
-            .from('perfis')
-            .select('tipo,empresa_id')
-            .eq('id',data.user.id)
-            .single();
-
-        if(profileError||!profile){
-            throw new Error('Perfil não autorizado.');
-        }
-
-        if(profile.tipo==='admin' && !profile.empresa_id){
-            location.replace('./painel.html');
-            return;
-        }
-
-        if(
-            ['proprietario','funcionario'].includes(profile.tipo)
-            && profile.empresa_id
-        ){
-            location.replace('./empresa.html');
-            return;
-        }
-
-        await sb.auth.signOut();
-        message.textContent='Sua conta não possui autorização para acessar este ambiente.';
-
-    } catch(err) {
-        console.error('Erro no login:',err);
-        message.textContent=err.message==='Perfil não autorizado.'
-            ? 'Sua conta não possui um perfil autorizado.'
-            : 'Não foi possível entrar. Verifique o e-mail e a senha.';
-    } finally {
-        submit.disabled=false;
-    }
-});
-</script>
+<script type="module" id="detailgest-login-script">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
 const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
