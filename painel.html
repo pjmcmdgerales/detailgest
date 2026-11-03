@@ -30,9 +30,9 @@
 <section id="bookings" class="hidden">
 <div class="cards"><div class="stat"><span>Total de agendamentos</span><strong id="book-total">0</strong></div><div class="stat"><span>Agendamentos de hoje</span><strong id="book-today">0</strong></div><div class="stat"><span>Concluídos</span><strong id="book-done">0</strong></div><div class="stat"><span>Cancelados</span><strong id="book-cancelled">0</strong></div></div>
 <div class="card"><h2>Controle de agendamentos</h2><p class="muted">Consulte os agendamentos registrados pelas empresas na plataforma.</p><div class="notice">Esta tela é de consulta administrativa. Os dados são carregados diretamente da tabela agendamentos do Supabase; nenhuma alteração é feita nos registros.</div>
-<div class="booking-filters"><input id="book-search" type="search" placeholder="Buscar empresa ou identificador" aria-label="Buscar agendamentos"><select id="book-company" aria-label="Filtrar empresa"><option value="">Todas as empresas</option></select><select id="book-status" aria-label="Filtrar situação"><option value="">Todas as situações</option></select><input id="book-date" type="date" aria-label="Filtrar data"><button id="book-clear" class="secondary" type="button">Limpar filtros</button><button id="book-refresh" class="secondary" type="button">Atualizar</button></div>
+<div class="booking-filters"><input id="book-search" type="search" placeholder="Buscar empresa, cliente, placa ou serviço" aria-label="Buscar agendamentos"><select id="book-company" aria-label="Filtrar empresa"><option value="">Todas as empresas</option></select><select id="book-status" aria-label="Filtrar situação"><option value="">Todas as situações</option></select><input id="book-date" type="date" aria-label="Filtrar data"><button id="book-clear" class="secondary" type="button">Limpar filtros</button><button id="book-refresh" class="secondary" type="button">Atualizar</button></div>
 <p id="book-count" class="muted" role="status"></p><div id="book-table">Carregando...</div><div id="book-details" class="booking-details hidden"></div>
-<p class="booking-note">Os nomes de clientes, veículos e serviços poderão ser adicionados após verificarmos a estrutura dessas tabelas. Por enquanto, seus identificadores aparecem nos detalhes.</p></div></section>
+<p class="booking-note" id="book-related-note">Os dados relacionados são consultados em modo somente leitura.</p></div></section>
 <section id="placeholder" class="hidden"><div class="card"><h2 id="placeholder-title"></h2><p class="muted">Esta área será desenvolvida nas próximas etapas do DetailGest.</p><div class="notice">As assinaturas e cobranças ainda não estão integradas a um sistema de pagamentos.</div></div></section>
 </div></main></div>
 <script type="module">
@@ -90,13 +90,44 @@ $('fin-cancel').addEventListener('click',resetFinanceForm);
 $('finance-form').addEventListener('submit',async event=>{event.preventDefault();const btn=$('fin-save');btn.disabled=true;financeMessage('Salvando mensalidade...');try{const competence=$('fin-competence').value,amount=Number($('fin-amount').value),status=$('fin-status').value;if(!competence||!$('fin-company').value||!$('fin-due').value||!Number.isFinite(amount)||amount<0)throw new Error('Preencha os dados obrigatórios corretamente.');const paidDate=$('fin-paid-date').value;if(status==='pago'&&!paidDate)throw new Error('Informe a data do pagamento para uma mensalidade paga.');const payload={empresa_id:$('fin-company').value,competencia:competence+'-01',vencimento:$('fin-due').value,valor:amount,status,pago_em:status==='pago'?new Date(paidDate+'T12:00:00').toISOString():null,observacoes:$('fin-notes').value.trim()||null};const {error}=editingPaymentId?await sb.from('mensalidades').update(payload).eq('id',editingPaymentId):await sb.from('mensalidades').insert(payload);if(error)throw error;await loadPayments();resetFinanceForm();financeMessage('Mensalidade salva com sucesso!','success');}catch(err){console.error('Erro ao salvar mensalidade:',err);financeMessage('Não foi possível salvar: '+(err.code==='23505'?'já existe uma mensalidade dessa empresa para esta competência.':(err.message||'erro desconhecido')),'error');}finally{btn.disabled=false;}});
 
 
-// Agendamentos: consulta somente leitura, sem supor colunas nas tabelas relacionadas.
+// Agendamentos: consulta somente leitura. Os dados relacionados são buscados por IDs,
+// sem depender de joins PostgREST ambíguos em chaves estrangeiras compostas.
 const bookDateTime=value=>{if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});};
 const bookDate=value=>{if(!value)return '';const d=new Date(value);if(Number.isNaN(d.getTime()))return '';return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
 const bookingDone=status=>['concluido','concluído','finalizado','finalizada','realizado','realizada'].includes(String(status||'').toLocaleLowerCase('pt-BR'));
 const bookingCancelled=status=>['cancelado','cancelada','cancelled'].includes(String(status||'').toLocaleLowerCase('pt-BR'));
+let bookingClients=new Map(),bookingVehicles=new Map(),bookingServices=new Map(),bookingRelatedWarning='';
+const bookingClient=b=>{const c=bookingClients.get(b.cliente_id);return c&&c.empresa_id===b.empresa_id?c:null;};
+const bookingVehicle=b=>{const v=bookingVehicles.get(b.veiculo_id);return v&&v.empresa_id===b.empresa_id&&v.cliente_id===b.cliente_id?v:null;};
+const bookingService=b=>{const s=bookingServices.get(b.servico_id);return s&&s.empresa_id===b.empresa_id?s:null;};
+const bookingVehicleName=b=>{const v=bookingVehicle(b);return v?[v.placa,[v.marca,v.modelo].filter(Boolean).join(' ')].filter(Boolean).join(' • ')||'Veículo sem identificação':'—';};
 function populateBookingCompanies(){const select=$('book-company'),value=select.value;select.replaceChildren(new Option('Todas as empresas',''));companies.forEach(c=>select.add(new Option(c.nome,c.id)));select.value=value;}
-async function loadBookings(){const host=$('book-table');host.textContent='Carregando agendamentos...';const {data,error}=await sb.from('agendamentos').select('id,empresa_id,cliente_id,veiculo_id,servico_id,inicio,fim,status,observacoes,criado_em').order('inicio',{ascending:false}).limit(1000);if(error){host.textContent='Não foi possível carregar os agendamentos: '+error.message;$('book-count').textContent='';console.error('Erro ao consultar agendamentos:',error);return;}bookings=data||[];renderBookings();}
+async function loadBookingRelated(table,ids,columns){
+ const unique=[...new Set(ids.filter(Boolean))];const result=new Map();
+ // Limita cada consulta para evitar URLs grandes e preservar o escopo das relações.
+ for(let i=0;i<unique.length;i+=100){
+  const {data,error}=await sb.from(table).select(columns).in('id',unique.slice(i,i+100));
+  if(error)throw error;
+  (data||[]).forEach(row=>result.set(row.id,row));
+ }
+ return result;
+}
+async function loadBookings(){
+ const host=$('book-table');host.textContent='Carregando agendamentos...';
+ const {data,error}=await sb.from('agendamentos').select('id,empresa_id,cliente_id,veiculo_id,servico_id,inicio,fim,status,observacoes,criado_em').order('inicio',{ascending:false}).limit(1000);
+ if(error){host.textContent='Não foi possível carregar os agendamentos: '+error.message;$('book-count').textContent='';console.error('Erro ao consultar agendamentos:',error);return;}
+ bookings=data||[];bookingClients=new Map();bookingVehicles=new Map();bookingServices=new Map();bookingRelatedWarning='';
+ const jobs=[
+  ['clientes',bookings.map(b=>b.cliente_id),'id,empresa_id,nome,telefone,whatsapp,email',map=>bookingClients=map],
+  ['veiculos',bookings.map(b=>b.veiculo_id),'id,empresa_id,cliente_id,placa,marca,modelo,ano,cor',map=>bookingVehicles=map],
+  ['servicos',bookings.map(b=>b.servico_id),'id,empresa_id,nome,descricao,preco,duracao_minutos',map=>bookingServices=map]
+ ];
+ const results=await Promise.allSettled(jobs.map(async ([table,ids,columns,set])=>{set(await loadBookingRelated(table,ids,columns));}));
+ const failed=results.flatMap((r,i)=>r.status==='rejected'?[jobs[i][0]]:[]);
+ if(failed.length){bookingRelatedWarning='Não foi possível consultar os dados de '+failed.join(', ')+'. Confira as permissões de leitura (RLS) dessas tabelas.';results.forEach((r,i)=>{if(r.status==='rejected')console.error('Falha na consulta de '+jobs[i][0],r.reason);});}
+ $('book-related-note').textContent=bookingRelatedWarning||'Nomes de clientes, placas e serviços são consultados em modo somente leitura. Os registros não são alterados.';
+ renderBookings();
+}
 function renderBookings(){
  const companyMap=new Map(companies.map(c=>[c.id,c.nome]));
  $('book-total').textContent=bookings.length;
@@ -108,15 +139,34 @@ function renderBookings(){
  statusSelect.replaceChildren(new Option('Todas as situações',''));
  statuses.forEach(st=>statusSelect.add(new Option(st,st)));statusSelect.value=chosen;
  const q=$('book-search').value.trim().toLocaleLowerCase('pt-BR'),company=$('book-company').value,status=$('book-status').value,date=$('book-date').value;
- const filtered=bookings.filter(b=>(!company||b.empresa_id===company)&&(!status||b.status===status)&&(!date||bookDate(b.inicio)===date)&&(!q||[companyMap.get(b.empresa_id),b.id,b.cliente_id,b.veiculo_id,b.servico_id,b.status].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(q))));
+ const filtered=bookings.filter(b=>{
+  const c=bookingClient(b),v=bookingVehicle(b),s=bookingService(b);
+  const searchable=[companyMap.get(b.empresa_id),b.id,b.cliente_id,b.veiculo_id,b.servico_id,b.status,c?.nome,c?.telefone,c?.whatsapp,v?.placa,v?.marca,v?.modelo,s?.nome];
+  return (!company||b.empresa_id===company)&&(!status||b.status===status)&&(!date||bookDate(b.inicio)===date)&&(!q||searchable.some(value=>String(value||'').toLocaleLowerCase('pt-BR').includes(q)));
+ });
  $('book-count').textContent=filtered.length+' de '+bookings.length+' agendamento(s) exibido(s).'+(bookings.length===1000?' Exibindo até 1.000 registros mais recentes.':'');
  const host=$('book-table');$('book-details').classList.add('hidden');$('book-details').replaceChildren();
  if(!filtered.length){host.textContent='Nenhum agendamento encontrado.';return;}
  const wrap=document.createElement('div');wrap.className='table-wrap';const table=document.createElement('table');const head=document.createElement('thead'),hr=document.createElement('tr');
- ['Empresa','Início','Término','Situação','Ação'].forEach(label=>{const th=document.createElement('th');th.textContent=label;hr.appendChild(th);});head.appendChild(hr);table.appendChild(head);
- const body=document.createElement('tbody');filtered.forEach(b=>{const row=document.createElement('tr');cell(row,companyMap.get(b.empresa_id)||'Empresa não encontrada');cell(row,bookDateTime(b.inicio));cell(row,bookDateTime(b.fim));const st=cell(row,'');const tag=document.createElement('span');tag.className='pill '+(bookingDone(b.status)?'active':bookingCancelled(b.status)?'suspended':'');tag.textContent=b.status||'—';st.appendChild(tag);const td=document.createElement('td');const btn=document.createElement('button');btn.className='smallbtn';btn.type='button';btn.textContent='Detalhes';btn.addEventListener('click',()=>showBookingDetails(b,companyMap.get(b.empresa_id)));td.appendChild(btn);row.appendChild(td);body.appendChild(row);});table.appendChild(body);wrap.appendChild(table);host.replaceChildren(wrap);
+ ['Empresa','Cliente','Veículo','Serviço','Início','Situação','Ação'].forEach(label=>{const th=document.createElement('th');th.textContent=label;hr.appendChild(th);});head.appendChild(hr);table.appendChild(head);
+ const body=document.createElement('tbody');filtered.forEach(b=>{
+  const row=document.createElement('tr');cell(row,companyMap.get(b.empresa_id)||'Empresa não encontrada');cell(row,bookingClient(b)?.nome||'—');cell(row,bookingVehicleName(b));cell(row,bookingService(b)?.nome||'—');cell(row,bookDateTime(b.inicio));
+  const st=cell(row,'');const tag=document.createElement('span');tag.className='pill '+(bookingDone(b.status)?'active':bookingCancelled(b.status)?'suspended':'');tag.textContent=b.status||'—';st.appendChild(tag);
+  const td=document.createElement('td');const btn=document.createElement('button');btn.className='smallbtn';btn.type='button';btn.textContent='Detalhes';btn.addEventListener('click',()=>showBookingDetails(b,companyMap.get(b.empresa_id)));td.appendChild(btn);row.appendChild(td);body.appendChild(row);
+ });table.appendChild(body);wrap.appendChild(table);host.replaceChildren(wrap);
 }
-function showBookingDetails(b,companyName){const box=$('book-details');box.replaceChildren();const title=document.createElement('h2');title.textContent='Detalhes do agendamento';box.appendChild(title);const dl=document.createElement('dl');[['Empresa',companyName||b.empresa_id],['Cliente (ID)',b.cliente_id],['Veículo (ID)',b.veiculo_id],['Serviço (ID)',b.servico_id||'Não informado'],['Início',bookDateTime(b.inicio)],['Término',bookDateTime(b.fim)],['Situação',b.status],['Observações',b.observacoes||'Nenhuma'],['Criado em',bookDateTime(b.criado_em)],['Agendamento (ID)',b.id]].forEach(([key,value])=>{const div=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=value||'—';div.append(dt,dd);dl.appendChild(div);});box.appendChild(dl);box.classList.remove('hidden');box.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function showBookingDetails(b,companyName){
+ const c=bookingClient(b),v=bookingVehicle(b),s=bookingService(b),box=$('book-details');box.replaceChildren();
+ const title=document.createElement('h2');title.textContent='Detalhes do agendamento';box.appendChild(title);const dl=document.createElement('dl');
+ [
+  ['Empresa',companyName||b.empresa_id],['Cliente',c?.nome||'Não encontrado'],['Telefone do cliente',c?.telefone||c?.whatsapp||'—'],['E-mail do cliente',c?.email||'—'],
+  ['Veículo',bookingVehicleName(b)],['Ano / cor do veículo',v?[v.ano,v.cor].filter(Boolean).join(' • ')||'—':'—'],
+  ['Serviço',s?.nome||(b.servico_id?'Não encontrado':'Não informado')],['Descrição do serviço',s?.descricao||'—'],['Preço cadastrado do serviço',s?.preco!=null?money(s.preco):'—'],['Duração prevista do serviço',s?.duracao_minutos!=null?s.duracao_minutos+' minutos':'—'],
+  ['Início',bookDateTime(b.inicio)],['Término',bookDateTime(b.fim)],['Situação',b.status],['Observações',b.observacoes||'Nenhuma'],['Criado em',bookDateTime(b.criado_em)],
+  ['Cliente (ID)',b.cliente_id],['Veículo (ID)',b.veiculo_id],['Serviço (ID)',b.servico_id||'Não informado'],['Agendamento (ID)',b.id]
+ ].forEach(([key,value])=>{const div=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=value??'—';div.append(dt,dd);dl.appendChild(div);});
+ box.appendChild(dl);box.classList.remove('hidden');box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 ['book-search','book-company','book-status','book-date'].forEach(id=>$(id).addEventListener(id==='book-search'?'input':'change',renderBookings));
 $('book-clear').addEventListener('click',()=>{$('book-search').value='';$('book-company').value='';$('book-status').value='';$('book-date').value='';renderBookings();});
 $('book-refresh').addEventListener('click',loadBookings);
