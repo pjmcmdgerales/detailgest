@@ -14,6 +14,72 @@
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
+
+const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const form=document.getElementById('login-form');
+const message=document.getElementById('message');
+const submit=document.getElementById('submit');
+
+document.getElementById('toggle').addEventListener('click',()=>{
+    const input=document.getElementById('password');
+    const show=input.type==='password';
+    input.type=show?'text':'password';
+    document.getElementById('toggle').textContent=show?'Ocultar':'Mostrar';
+});
+
+form.addEventListener('submit',async e=>{
+    e.preventDefault();
+
+    submit.disabled=true;
+    message.textContent='Verificando credenciais...';
+
+    try {
+        const {data,error}=await sb.auth.signInWithPassword({
+            email:document.getElementById('email').value.trim(),
+            password:document.getElementById('password').value
+        });
+
+        if(error) throw error;
+
+        const {data:profile,error:profileError}=await sb
+            .from('perfis')
+            .select('tipo,empresa_id')
+            .eq('id',data.user.id)
+            .single();
+
+        if(profileError||!profile){
+            throw new Error('Perfil não autorizado.');
+        }
+
+        if(profile.tipo==='admin' && !profile.empresa_id){
+            location.replace('./painel.html');
+            return;
+        }
+
+        if(
+            ['proprietario','funcionario'].includes(profile.tipo)
+            && profile.empresa_id
+        ){
+            location.replace('./empresa.html');
+            return;
+        }
+
+        await sb.auth.signOut();
+        message.textContent='Sua conta não possui autorização para acessar este ambiente.';
+
+    } catch(err) {
+        console.error('Erro no login:',err);
+        message.textContent=err.message==='Perfil não autorizado.'
+            ? 'Sua conta não possui um perfil autorizado.'
+            : 'Não foi possível entrar. Verifique o e-mail e a senha.';
+    } finally {
+        submit.disabled=false;
+    }
+});
+</script>
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
 const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const form=document.getElementById('login-form'),message=document.getElementById('message'),submit=document.getElementById('submit');
 document.getElementById('toggle').addEventListener('click',()=>{const input=document.getElementById('password');const show=input.type==='password';input.type=show?'text':'password';document.getElementById('toggle').textContent=show?'Ocultar':'Mostrar';});
