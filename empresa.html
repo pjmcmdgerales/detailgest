@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel da Empresa | DetailGest</title>
+<style>
+:root{color-scheme:dark;--bg:#071524;--panel:#0b2035;--panel2:#102e49;--blue:#0878e8;--lime:#8cff00;--white:#f4f7fb;--muted:#a7bbcf;--border:#284762;--danger:#ffb0b0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:system-ui,-apple-system,Segoe UI,sans-serif}button{font:inherit;cursor:pointer}.hidden{display:none!important}.loading{min-height:100vh;display:grid;place-items:center;padding:28px;text-align:center;color:var(--muted)}.layout{min-height:100vh;display:grid;grid-template-columns:255px minmax(0,1fr)}aside{background:#06101e;border-right:1px solid var(--border);padding:27px 17px}.brand{font-size:27px;font-weight:900;letter-spacing:-1px;margin:0 8px 12px}.brand .mark,.brand .green{color:var(--lime)}.aside-sub{font-size:12px;color:var(--muted);margin:0 8px 34px}nav{display:grid;gap:7px}nav button{border:1px solid transparent;border-radius:10px;padding:13px 15px;text-align:left;background:transparent;color:var(--muted);font-weight:650}nav button:hover,nav button.active{background:#102f4d;border-color:#28577b;color:#fff}nav button.active{border-left:3px solid var(--lime)}.aside-foot{margin:35px 8px;color:#7e99b2;font-size:12px;line-height:1.5}main{min-width:0;background:radial-gradient(circle at 95% 0,#0d3558 0,transparent 37%),#071524}header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:23px 34px;border-bottom:1px solid var(--border)}header strong{display:block;font-size:19px}header small{display:block;color:var(--muted);margin-top:4px}.logout{border:1px solid #376489;background:#0b2740;color:white;padding:10px 16px;border-radius:9px}.content{padding:31px 34px;max-width:1400px;margin:auto}h1{font-size:29px;margin:0 0 8px}.lead{color:var(--muted);margin:0 0 27px;line-height:1.6}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:22px}.stat,.card{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:22px}.stat span{color:var(--muted);font-size:13px}.stat strong{display:block;font-size:24px;margin-top:10px}.stat:first-child{border-top:3px solid var(--lime)}.card{margin-bottom:20px}h2{font-size:19px;margin:0 0 10px}.muted{color:var(--muted);line-height:1.6}.notice{border-left:3px solid var(--blue);padding:13px 15px;background:#102b43;color:#c2d5e6;border-radius:8px;margin-top:15px}.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:20px}.info{background:#081827;border:1px solid var(--border);border-radius:10px;padding:15px}.info span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.info strong{font-size:15px;overflow-wrap:anywhere}.pill{display:inline-block;border-radius:20px;padding:6px 11px;font-size:12px;font-weight:750;background:#193c27;color:#b5ff83}.pill.suspended{background:#4a2c35;color:#ffc0c0}.page{display:none}.page.active{display:block}.empty{padding:25px;border:1px dashed #42617b;border-radius:12px;color:var(--muted);text-align:center}.error{color:var(--danger)}@media(max-width:900px){.layout{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--border);padding:16px}.brand{margin-bottom:5px}.aside-sub{margin-bottom:14px}nav{display:flex;overflow:auto}nav button{white-space:nowrap;padding:11px}.aside-foot{display:none}.content{padding:23px 16px}header{padding:18px}.cards{grid-template-columns:1fr 1fr}}@media(max-width:560px){.cards,.info-grid{grid-template-columns:1fr}.cards .stat:last-child{grid-column:auto}}
+</style>
+</head>
+<body>
+<div id="loading" class="loading">Verificando seu acesso ao DetailGest...</div>
+<div id="app" class="layout hidden">
+<aside>
+  <div class="brand"><span class="mark">///</span> Detail<span class="green">Gest</span></div>
+  <p class="aside-sub">Painel do estabelecimento</p>
+  <nav aria-label="Menu da empresa">
+    <button class="active" data-page="overview">Visão geral</button>
+    <button data-page="bookings">Agendamentos</button>
+    <button data-page="services">Serviços</button>
+    <button data-page="customers">Clientes</button>
+    <button data-page="quotes">Orçamentos</button>
+    <button data-page="team">Equipe</button>
+    <button data-page="settings">Configurações</button>
+  </nav>
+  <div class="aside-foot">DetailGest<br>Gestão para Estética Automotiva</div>
+</aside>
+<main>
+  <header><div><strong id="header-company">Meu estabelecimento</strong><small>Ambiente exclusivo da sua empresa</small></div><button class="logout" id="logout">Sair da conta</button></header>
+  <div class="content">
+    <section id="page-overview" class="page active">
+      <h1>Visão geral</h1><p class="lead">Bem-vindo ao ambiente de gestão do seu estabelecimento.</p>
+      <div class="cards">
+        <div class="stat"><span>Plano contratado</span><strong id="plan-value">—</strong></div>
+        <div class="stat"><span>Situação da assinatura</span><strong id="status-value">—</strong></div>
+        <div class="stat"><span>Acesso</span><strong>Individual</strong></div>
+      </div>
+      <div class="card"><h2>Dados do estabelecimento</h2><p class="muted">Informações cadastradas pelo Administrador Geral do DetailGest.</p>
+        <div class="info-grid">
+          <div class="info"><span>Nome do estabelecimento</span><strong id="company-name">—</strong></div>
+          <div class="info"><span>Responsável</span><strong id="company-owner">—</strong></div>
+          <div class="info"><span>E-mail de contato</span><strong id="company-email">—</strong></div>
+          <div class="info"><span>Telefone / WhatsApp</span><strong id="company-phone">—</strong></div>
+        </div>
+      </div>
+      <div class="notice">Os módulos de agendamentos, serviços, clientes, orçamentos e equipe serão conectados ao banco de dados nas próximas etapas. Nenhum dado fictício será exibido.</div>
+    </section>
+    <section id="page-bookings" class="page"><h1>Agendamentos</h1><p class="lead">Organize os horários e atendimentos do seu estabelecimento.</p><div class="card"><div class="empty">Módulo em preparação. A estrutura será conectada ao banco antes de liberar cadastros.</div></div></section>
+    <section id="page-services" class="page"><h1>Serviços</h1><p class="lead">Cadastre os serviços de estética automotiva oferecidos pela sua empresa.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
+    <section id="page-customers" class="page"><h1>Clientes</h1><p class="lead">Consulte e organize os clientes do seu estabelecimento.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
+    <section id="page-quotes" class="page"><h1>Orçamentos</h1><p class="lead">Prepare e acompanhe orçamentos para seus clientes.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
+    <section id="page-team" class="page"><h1>Equipe</h1><p class="lead">Organize os profissionais e os acessos da sua empresa.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
+    <section id="page-settings" class="page"><h1>Configurações</h1><p class="lead">Consulte os dados cadastrais vinculados à sua conta.</p><div class="card"><div class="empty">Para proteger o cadastro, alterações cadastrais serão solicitadas ao Administrador Geral nesta primeira versão.</div></div></section>
+  </div>
+</main>
+</div>
+<script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
+const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+const goLogin=()=>location.replace('./login.html');
+function showError(message){$('loading').innerHTML='';const p=document.createElement('p');p.className='error';p.textContent=message;$('loading').appendChild(p);}
+function showPage(page){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+$('logout').addEventListener('click',async()=>{await sb.auth.signOut();goLogin();});
+async function init(){
+ try{
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError||!user){goLogin();return;}
+  const {data:profile,error:profileError}=await sb.from('perfis').select('tipo,empresa_id').eq('id',user.id).single();
+  if(profileError||!profile){showError('Não foi possível validar seu perfil. Procure o Administrador Geral.');return;}
+  if(profile.tipo==='admin'||!profile.empresa_id){showError('Este ambiente é exclusivo para contas vinculadas a um estabelecimento.');return;}
+  const {data:company,error:companyError}=await sb.from('empresas').select('id,nome,responsavel,email,telefone,plano,status').eq('id',profile.empresa_id).maybeSingle();
+  if(companyError){console.error(companyError);showError('Não foi possível carregar os dados. Verifique as permissões de acesso (RLS) da tabela empresas.');return;}
+  if(!company){showError('Nenhum estabelecimento foi encontrado para sua conta. Solicite a vinculação ao Administrador Geral.');return;}
+  if(company.status!=='ativo'){showError('O acesso deste estabelecimento está suspenso. Entre em contato com o Administrador Geral.');await sb.auth.signOut();return;}
+  $('header-company').textContent=company.nome||'Meu estabelecimento';
+  $('company-name').textContent=company.nome||'—';$('company-owner').textContent=company.responsavel||'—';$('company-email').textContent=company.email||'—';$('company-phone').textContent=company.telefone||'—';
+  $('plan-value').textContent=company.plano==='profissional'?'Profissional':'Essencial';
+  $('status-value').innerHTML='';const badge=document.createElement('span');badge.className='pill'+(company.status==='ativo'?'':' suspended');badge.textContent=company.status==='ativo'?'Ativo':'Suspenso';$('status-value').appendChild(badge);
+  $('loading').classList.add('hidden');$('app').classList.remove('hidden');
+ }catch(err){console.error('Falha ao iniciar painel da empresa:',err);showError('Ocorreu um erro ao carregar o painel. Atualize a página e tente novamente.');}
+}
+init();
+</script>
+</body>
+</html>
