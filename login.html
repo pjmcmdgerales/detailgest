@@ -1,22 +1,135 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Entrar | DetailGest</title>
 <style>
-:root{color-scheme:dark;--bg:#071524;--blue:#0878e8;--lime:#8cff00;--white:#f4f7fb;--muted:#a7bbcf}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 85% 20%,#123e68 0,transparent 45%),linear-gradient(145deg,#06101d,#071524 65%,#0b223a);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--white);display:flex;flex-direction:column}header{padding:25px max(24px,calc((100vw - 1100px)/2));border-bottom:1px solid #27415b}a{color:inherit;text-decoration:none}.brand{font-size:27px;font-weight:900;letter-spacing:-1px}.brand .mark,.brand .green{color:var(--lime)}main{flex:1;display:grid;place-items:center;padding:42px 18px}.card{width:min(100%,460px);padding:40px;background:#0b2035;border:1px solid #245178;border-radius:20px;box-shadow:0 25px 80px #0007}h1{margin:0 0 10px;font-size:30px}p{color:var(--muted);line-height:1.6;margin:0 0 28px}label{display:block;font-weight:650;margin:18px 0 8px}input{width:100%;background:#081727;border:1px solid #42607a;border-radius:10px;padding:15px;color:white;font:inherit;outline:none}input:focus{border-color:var(--lime);box-shadow:0 0 0 2px #8cff0030}.password{display:flex;gap:8px}.password input{min-width:0}.toggle{border:1px solid #42607a;border-radius:10px;background:#102e4a;color:white;padding:0 14px;cursor:pointer}button.submit{width:100%;background:var(--lime);color:#071524;font-weight:800;font-size:16px;border:0;border-radius:10px;padding:15px;margin-top:26px;cursor:pointer}button:disabled{opacity:.65;cursor:wait}.msg{min-height:22px;color:#ffb3b3;margin-top:15px;font-size:14px}.footer{color:var(--muted);text-align:center;padding:20px;font-size:13px}.hint{color:#b4c9da;font-size:13px;margin-top:16px}a:hover{text-decoration:underline}@media(max-width:520px){.card{padding:28px 22px}h1{font-size:26px}}
+:root{color-scheme:dark;--bg:#071524;--blue:#0878e8;--lime:#8cff00;--white:#f4f7fb;--muted:#a7bbcf}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 85% 20%,#123e68 0,transparent 45%),linear-gradient(145deg,#06101d,#071524 65%,#0b223a);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--white);display:flex;flex-direction:column}
+header{padding:25px max(24px,calc((100vw - 1100px)/2));border-bottom:1px solid #27415b}
+a{color:inherit;text-decoration:none}
+.brand{font-size:27px;font-weight:900;letter-spacing:-1px}
+.brand .mark,.brand .green{color:var(--lime)}
+main{flex:1;display:grid;place-items:center;padding:42px 18px}
+.card{width:min(100%,460px);padding:40px;background:#0b2035;border:1px solid #245178;border-radius:20px;box-shadow:0 25px 80px #0007}
+h1{margin:0 0 10px;font-size:30px}
+p{color:var(--muted);line-height:1.6;margin:0 0 28px}
+label{display:block;font-weight:650;margin:18px 0 8px}
+input{width:100%;background:#081727;border:1px solid #42607a;border-radius:10px;padding:15px;color:white;font:inherit;outline:none}
+input:focus{border-color:var(--lime);box-shadow:0 0 0 2px #8cff0030}
+.password{display:flex;gap:8px}
+.password input{min-width:0}
+.toggle{border:1px solid #42607a;border-radius:10px;background:#102e4a;color:white;padding:0 14px;cursor:pointer}
+button.submit{width:100%;background:var(--lime);color:#071524;font-weight:800;font-size:16px;border:0;border-radius:10px;padding:15px;margin-top:26px;cursor:pointer}
+button:disabled{opacity:.65;cursor:wait}
+.msg{min-height:22px;color:#ffb3b3;margin-top:15px;font-size:14px}
+.footer{color:var(--muted);text-align:center;padding:20px;font-size:13px}
+.hint{color:#b4c9da;font-size:13px;margin-top:16px}
+a:hover{text-decoration:underline}
+@media(max-width:520px){.card{padding:28px 22px}h1{font-size:26px}}
 </style>
 </head>
 <body>
-<header><a class="brand" href="./index.html"><span class="mark">///</span> Detail<span class="green">Gest</span></a></header>
-<main><section class="card" aria-labelledby="heading"><h1 id="heading">Acessar plataforma</h1><p>Entre com sua conta para acessar seu ambiente de gestão.</p><form id="login-form"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" placeholder="seuemail@exemplo.com" required><label for="password">Senha</label><div class="password"><input id="password" type="password" autocomplete="current-password" placeholder="Digite sua senha" required><button class="toggle" type="button" id="toggle">Mostrar</button></div><button class="submit" id="submit" type="submit">Entrar na plataforma</button><div class="msg" id="message" role="status" aria-live="polite"></div></form><div class="hint">O acesso é exclusivo para contas autorizadas.</div></section></main>
+
+<header>
+<a class="brand" href="./index.html">
+<span class="mark">///</span> Detail<span class="green">Gest</span>
+</a>
+</header>
+
+<main>
+<section class="card" aria-labelledby="heading">
+<h1 id="heading">Acessar plataforma</h1>
+<p>Entre com sua conta para acessar seu ambiente de gestão.</p>
+
+<form id="login-form">
+<label for="email">E-mail</label>
+<input id="email" type="email" autocomplete="username" placeholder="seuemail@exemplo.com" required>
+
+<label for="password">Senha</label>
+<div class="password">
+<input id="password" type="password" autocomplete="current-password" placeholder="Digite sua senha" required>
+<button class="toggle" type="button" id="toggle">Mostrar</button>
+</div>
+
+<button class="submit" id="submit" type="submit">Entrar na plataforma</button>
+<div class="msg" id="message" role="status" aria-live="polite"></div>
+</form>
+
+<div class="hint">O acesso é exclusivo para contas autorizadas.</div>
+</section>
+</main>
+
 <div class="footer">© DetailGest · Gestão para Estética Automotiva</div>
-<script type="module" id="detailgest-login-script">
+
+<script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
+
 const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-const form=document.getElementById('login-form'),message=document.getElementById('message'),submit=document.getElementById('submit');
-document.getElementById('toggle').addEventListener('click',()=>{const input=document.getElementById('password');const show=input.type==='password';input.type=show?'text':'password';document.getElementById('toggle').textContent=show?'Ocultar':'Mostrar';});
-form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;message.textContent='Verificando credenciais...';try{const {data,error}=await sb.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});if(error)throw error;const {data:profile,error:profileError}=await sb.from('perfis').select('tipo,empresa_id').eq('id',data.user.id).single();if(profileError||!profile){message.textContent='Sua conta não possui um perfil autorizado. Contate a administração.';await sb.auth.signOut();return;}if(profile.tipo==='admin'&&profile.empresa_id===null){location.replace('./painel.html');return;}message.textContent='Sua conta foi autenticada, mas seu painel ainda está em desenvolvimento.';await sb.auth.signOut();}catch(err){console.error('Erro no login:',err);message.textContent='Não foi possível entrar. Verifique o e-mail e a senha e tente novamente.';}finally{submit.disabled=false;}});
+
+const form=document.getElementById('login-form');
+const message=document.getElementById('message');
+const submit=document.getElementById('submit');
+const toggle=document.getElementById('toggle');
+const password=document.getElementById('password');
+
+toggle.addEventListener('click',()=>{
+  const show=password.type==='password';
+  password.type=show?'text':'password';
+  toggle.textContent=show?'Ocultar':'Mostrar';
+});
+
+form.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+
+  submit.disabled=true;
+  message.textContent='Verificando credenciais...';
+
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({
+      email:document.getElementById('email').value.trim(),
+      password:password.value
+    });
+
+    if(error)throw error;
+
+    const {data:profile,error:profileError}=await sb
+      .from('perfis')
+      .select('tipo,empresa_id')
+      .eq('id',data.user.id)
+      .single();
+
+    if(profileError||!profile){
+      message.textContent='Sua conta não possui um perfil autorizado.';
+      await sb.auth.signOut();
+      return;
+    }
+
+    if(profile.tipo==='admin' && profile.empresa_id===null){
+      window.location.replace('./painel.html');
+      return;
+    }
+
+    if(profile.tipo==='proprietario' && profile.empresa_id){
+      window.location.replace('./empresa.html');
+      return;
+    }
+
+    message.textContent='Seu perfil não possui acesso autorizado.';
+    await sb.auth.signOut();
+
+  }catch(err){
+    console.error('Erro no login:',err);
+    message.textContent='Não foi possível entrar. Verifique suas credenciais.';
+  }finally{
+    submit.disabled=false;
+  }
+});
 </script>
-</body></html>
+
+</body>
+</html>
