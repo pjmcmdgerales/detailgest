@@ -51,10 +51,31 @@
           <div class="info"><span>Telefone / WhatsApp</span><strong id="company-phone">—</strong></div>
         </div>
       </div>
-      <div class="notice">Os cadastros de clientes e veículos estão integrados ao Supabase. Agendamentos, serviços, orçamentos e equipe serão conectados nas próximas etapas.</div>
+      <div class="notice">Os cadastros de clientes, veículos e serviços estão integrados ao Supabase. Agendamentos, orçamentos e equipe serão conectados nas próximas etapas.</div>
     </section>
     <section id="page-bookings" class="page"><h1>Agendamentos</h1><p class="lead">Organize os horários e atendimentos do seu estabelecimento.</p><div class="card"><div class="empty">Módulo em preparação. A estrutura será conectada ao banco antes de liberar cadastros.</div></div></section>
-    <section id="page-services" class="page"><h1>Serviços</h1><p class="lead">Cadastre os serviços de estética automotiva oferecidos pela sua empresa.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
+    <section id="page-services" class="page">
+      <h1>Serviços</h1><p class="lead">Cadastre e gerencie os serviços de estética automotiva oferecidos pela sua empresa.</p>
+      <div class="card">
+        <div class="toolbar"><input id="service-search" type="search" placeholder="Pesquisar por nome ou descrição" aria-label="Pesquisar serviços"><button class="primary" id="new-service" type="button">+ Novo serviço</button></div>
+        <div id="services-feedback" class="feedback" role="status" aria-live="polite"></div>
+        <div id="services-list" class="table-wrap"><div class="empty">Carregando serviços...</div></div>
+      </div>
+      <div id="service-editor" class="card hidden">
+        <h2 id="service-form-title">Cadastrar serviço</h2>
+        <form id="service-form">
+          <div class="form-grid">
+            <div class="field wide"><label for="service-name">Nome do serviço *</label><input id="service-name" required maxlength="200" placeholder="Ex.: Higienização interna"></div>
+            <div class="field wide"><label for="service-description">Descrição</label><textarea id="service-description" rows="3" placeholder="Detalhes do serviço"></textarea></div>
+            <div class="field"><label for="service-price">Preço (R$) *</label><input id="service-price" type="text" inputmode="decimal" required placeholder="Ex.: 149,90"></div>
+            <div class="field"><label for="service-duration">Duração estimada (minutos) *</label><input id="service-duration" type="number" min="1" max="100000" step="1" required placeholder="Ex.: 120"></div>
+            <div class="field wide"><label for="service-active">Situação</label><select id="service-active"><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
+          </div>
+          <div class="actions"><button class="primary" id="service-save" type="submit">Salvar serviço</button><button class="secondary" id="service-cancel" type="button">Cancelar</button></div>
+          <div id="service-form-feedback" class="feedback" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
     <section id="page-customers" class="page">
 <h1>Clientes</h1><p class="lead">Cadastre e consulte os clientes do seu estabelecimento.</p>
 <div class="card">
@@ -122,6 +143,9 @@ let customersLoaded=false;
  let vehicleRows=[];
  let vehiclesLoaded=false;
  let editingVehicleId=null;
+ let serviceRows=[];
+ let servicesLoaded=false;
+ let editingServiceId=null;
 const customerField=id=>$(id).value.trim();
 function customerFeedback(text,isError=false,target='customers-feedback'){
  const el=$(target);el.textContent=text;el.classList.toggle('error',isError);
@@ -266,8 +290,81 @@ $('vehicle-form').addEventListener('submit',async e=>{
  finally{button.disabled=false;}
 });
 
+
+// Serviços: dados consultados e gravados apenas para a empresa autenticada.
+const serviceField=id=>$(id).value.trim();
+function serviceFeedback(message,isError=false,target='services-feedback'){
+ const el=$(target);el.textContent=message;el.classList.toggle('error',isError);
+}
+function showServiceForm(service=null){
+ editingServiceId=service?.id||null;
+ $('service-form-title').textContent=service?'Editar serviço':'Cadastrar serviço';
+ $('service-name').value=service?.nome||'';
+ $('service-description').value=service?.descricao||'';
+ $('service-price').value=service?.preco==null?'':Number(service.preco).toFixed(2).replace('.',',');
+ $('service-duration').value=service?.duracao_minutos??'';
+ $('service-active').value=service?.ativo===false?'false':'true';
+ serviceFeedback('',false,'service-form-feedback');
+ $('service-editor').classList.remove('hidden');
+ $('service-editor').scrollIntoView({behavior:'smooth',block:'start'});
+ $('service-name').focus({preventScroll:true});
+}
+function hideServiceForm(){editingServiceId=null;$('service-editor').classList.add('hidden');}
+function renderServices(){
+ const term=serviceField('service-search').toLocaleLowerCase('pt-BR');
+ const rows=serviceRows.filter(s=>[s.nome,s.descricao].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(term)));
+ const container=$('services-list');container.replaceChildren();
+ if(!rows.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=term?'Nenhum serviço corresponde à pesquisa.':'Nenhum serviço cadastrado nesta empresa.';container.appendChild(empty);return;}
+ const table=document.createElement('table');table.className='customer-table';
+ const head=document.createElement('thead'),headRow=document.createElement('tr');
+ ['Serviço','Descrição','Preço','Duração','Situação','Ações'].forEach(label=>{const th=document.createElement('th');th.textContent=label;headRow.appendChild(th);});
+ head.appendChild(headRow);table.appendChild(head);
+ const body=document.createElement('tbody');
+ const currency=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+ rows.forEach(s=>{
+  const row=document.createElement('tr');
+  [s.nome,s.descricao||'—',s.preco==null?'—':currency.format(Number(s.preco)),s.duracao_minutos==null?'—':s.duracao_minutos+' min',s.ativo===false?'Inativo':'Ativo'].forEach(value=>{const td=document.createElement('td');td.textContent=value;row.appendChild(td);});
+  const td=document.createElement('td'),button=document.createElement('button');button.type='button';button.className='small-btn';button.textContent='Editar';button.addEventListener('click',()=>showServiceForm(s));td.appendChild(button);row.appendChild(td);body.appendChild(row);
+ });
+ table.appendChild(body);container.appendChild(table);
+}
+async function loadServices(){
+ if(!currentCompanyId)return;
+ serviceFeedback('Carregando serviços...');
+ const {data,error}=await sb.from('servicos').select('id,nome,descricao,preco,duracao_minutos,ativo').eq('empresa_id',currentCompanyId).order('nome',{ascending:true});
+ if(error){console.error('Erro ao consultar serviços:',error);servicesLoaded=false;serviceFeedback('Não foi possível consultar serviços. Verifique as permissões RLS da tabela servicos.',true);$('services-list').replaceChildren();return;}
+ serviceRows=data||[];servicesLoaded=true;
+ serviceFeedback(`${serviceRows.length} serviço(s) encontrado(s).`);renderServices();
+}
+$('new-service').addEventListener('click',()=>showServiceForm());
+$('service-cancel').addEventListener('click',hideServiceForm);
+$('service-search').addEventListener('input',renderServices);
+$('service-form').addEventListener('submit',async e=>{
+ e.preventDefault();if(!currentCompanyId)return;
+ const button=$('service-save');button.disabled=true;
+ serviceFeedback('Salvando serviço...',false,'service-form-feedback');
+ try{
+  const name=serviceField('service-name');
+  const priceText=serviceField('service-price').replace(/\s/g,'').replace(/^R\$/i,'');
+  const normalizedPrice=priceText.includes(',')?priceText.replace(/\./g,'').replace(',','.'):priceText;
+  const price=Number(normalizedPrice),duration=Number(serviceField('service-duration'));
+  if(!name)throw new Error('Informe o nome do serviço.');
+  if(!priceText||!/^\d+(?:\.\d{1,2})?$/.test(normalizedPrice)||!Number.isFinite(price)||price<0)throw new Error('Informe um preço válido. Ex.: 149,90.');
+  if(!Number.isInteger(duration)||duration<1||duration>100000)throw new Error('Informe a duração em minutos (número inteiro maior que zero).');
+  const payload={nome:name,descricao:serviceField('service-description')||null,preco:price,duracao_minutos:duration,ativo:$('service-active').value==='true'};
+  const query=editingServiceId
+   ?sb.from('servicos').update(payload).eq('id',editingServiceId).eq('empresa_id',currentCompanyId).select('id')
+   :sb.from('servicos').insert({...payload,empresa_id:currentCompanyId}).select('id');
+  const {data,error}=await query;
+  if(error)throw error;
+  if(!data?.length)throw new Error('Gravação não confirmada. Verifique as permissões da tabela servicos.');
+  hideServiceForm();await loadServices();if(servicesLoaded)serviceFeedback('Serviço salvo com sucesso.');
+ }catch(err){console.error('Erro ao salvar serviço:',err);serviceFeedback('Não foi possível salvar: '+(err.message||'erro desconhecido'),true,'service-form-feedback');}
+ finally{button.disabled=false;}
+});
+
 function showError(message){$('loading').innerHTML='';const p=document.createElement('p');p.className='error';p.textContent=message;$('loading').appendChild(p);}
-function showPage(page){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));if(page==='customers'&&!customersLoaded)loadCustomers();if(page==='vehicles'){(async()=>{if(!customersLoaded)await loadCustomers();if(!vehiclesLoaded)await loadVehicles();else renderVehicles();})();}}
+function showPage(page){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));if(page==='customers'&&!customersLoaded)loadCustomers();if(page==='services'&&!servicesLoaded)loadServices();if(page==='vehicles'){(async()=>{if(!customersLoaded)await loadCustomers();if(!vehiclesLoaded)await loadVehicles();else renderVehicles();})();}}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('logout').addEventListener('click',async()=>{await sb.auth.signOut();goLogin();});
 async function init(){
