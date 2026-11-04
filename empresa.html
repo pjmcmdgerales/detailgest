@@ -383,7 +383,7 @@ async function loadOverview(){
  const countQuery=(table,configure)=>{let q=sb.from(table).select('id',{count:'exact',head:true}).eq('empresa_id',currentCompanyId);return configure?configure(q):q};
  const start=new Date();const todayStart=new Date(start.getFullYear(),start.getMonth(),start.getDate());const tomorrow=new Date(todayStart);tomorrow.setDate(tomorrow.getDate()+1);
  const jobs=[
-  ['ov-today',countQuery('agendamentos',q=>q.gte('inicio',todayStart.toISOString()).lt('inicio',tomorrow.toISOString()).neq('status','cancelado'))],
+  ['ov-today',countQuery('agendamentos',q=>q.gte('inicio',todayStart.toISOString()).lt('inicio',tomorrow.toISOString()).not('status','in', '("cancelado","concluido")'))],
   ['ov-upcoming',countQuery('agendamentos',q=>q.gte('inicio',start.toISOString()).not('status','in','("cancelado","concluido")'))],
   ['ov-customers',countQuery('clientes',q=>q.eq('ativo',true))],
   ['ov-vehicles',countQuery('veiculos',q=>q.eq('ativo',true))],
