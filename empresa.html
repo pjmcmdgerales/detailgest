@@ -393,7 +393,7 @@ async function loadOverview(){
   ['ov-team',countQuery('equipe',q=>q.eq('ativo',true))]
  ];
  try{
-  const results=await Promise.allSettled([...jobs.map(j=>j[1]),sb.from('agendamentos').select('id,cliente_id,veiculo_id,servico_id,inicio,status').eq('empresa_id',currentCompanyId).gte('inicio',start.toISOString()).neq('status','cancelado').order('inicio',{ascending:true}).limit(6)]);
+  const results=await Promise.allSettled([...jobs.map(j=>j[1]),sb.from('agendamentos').select('id,cliente_id,veiculo_id,servico_id,inicio,status').eq('empresa_id',currentCompanyId).gte('inicio',start.toISOString()).not('status','in','("cancelado","concluido")').order('inicio',{ascending:true}).limit(6)]);
   let errors=0;
   jobs.forEach(([id],i)=>{const r=results[i];if(r.status==='fulfilled'&&!r.value.error){$(id).textContent=String(r.value.count??0)}else{$(id).textContent='—';errors++}});
   const ap=results[jobs.length],box=$('ov-appointments');box.replaceChildren();
