@@ -5,6 +5,14 @@
 <title>Painel da Empresa | DetailGest</title>
 <style>
 :root{color-scheme:dark;--bg:#071524;--panel:#0b2035;--panel2:#102e49;--blue:#0878e8;--lime:#8cff00;--white:#f4f7fb;--muted:#a7bbcf;--border:#284762;--danger:#ffb0b0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:system-ui,-apple-system,Segoe UI,sans-serif}button{font:inherit;cursor:pointer}.hidden{display:none!important}.loading{min-height:100vh;display:grid;place-items:center;padding:28px;text-align:center;color:var(--muted)}.layout{min-height:100vh;display:grid;grid-template-columns:255px minmax(0,1fr)}aside{background:#06101e;border-right:1px solid var(--border);padding:27px 17px}.brand{font-size:27px;font-weight:900;letter-spacing:-1px;margin:0 8px 12px}.brand .mark,.brand .green{color:var(--lime)}.aside-sub{font-size:12px;color:var(--muted);margin:0 8px 34px}nav{display:grid;gap:7px}nav button{border:1px solid transparent;border-radius:10px;padding:13px 15px;text-align:left;background:transparent;color:var(--muted);font-weight:650}nav button:hover,nav button.active{background:#102f4d;border-color:#28577b;color:#fff}nav button.active{border-left:3px solid var(--lime)}.aside-foot{margin:35px 8px;color:#7e99b2;font-size:12px;line-height:1.5}main{min-width:0;background:radial-gradient(circle at 95% 0,#0d3558 0,transparent 37%),#071524}header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:23px 34px;border-bottom:1px solid var(--border)}header strong{display:block;font-size:19px}header small{display:block;color:var(--muted);margin-top:4px}.logout{border:1px solid #376489;background:#0b2740;color:white;padding:10px 16px;border-radius:9px}.content{padding:31px 34px;max-width:1400px;margin:auto}h1{font-size:29px;margin:0 0 8px}.lead{color:var(--muted);margin:0 0 27px;line-height:1.6}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:22px}.stat,.card{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:22px}.stat span{color:var(--muted);font-size:13px}.stat strong{display:block;font-size:24px;margin-top:10px}.stat:first-child{border-top:3px solid var(--lime)}.card{margin-bottom:20px}h2{font-size:19px;margin:0 0 10px}.muted{color:var(--muted);line-height:1.6}.notice{border-left:3px solid var(--blue);padding:13px 15px;background:#102b43;color:#c2d5e6;border-radius:8px;margin-top:15px}.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:20px}.info{background:#081827;border:1px solid var(--border);border-radius:10px;padding:15px}.info span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.info strong{font-size:15px;overflow-wrap:anywhere}.pill{display:inline-block;border-radius:20px;padding:6px 11px;font-size:12px;font-weight:750;background:#193c27;color:#b5ff83}.pill.suspended{background:#4a2c35;color:#ffc0c0}.page{display:none}.page.active{display:block}.empty{padding:25px;border:1px dashed #42617b;border-radius:12px;color:var(--muted);text-align:center}.error{color:var(--danger)}@media(max-width:900px){.layout{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--border);padding:16px}.brand{margin-bottom:5px}.aside-sub{margin-bottom:14px}nav{display:flex;overflow:auto}nav button{white-space:nowrap;padding:11px}.aside-foot{display:none}.content{padding:23px 16px}header{padding:18px}.cards{grid-template-columns:1fr 1fr}}@media(max-width:560px){.cards,.info-grid{grid-template-columns:1fr}.cards .stat:last-child{grid-column:auto}}
+
+/* Cadastro de clientes */
+.toolbar{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:0 0 18px}
+.toolbar input{flex:1;min-width:220px}.field input,.field select,.field textarea,.toolbar input{background:#081827;color:#fff;border:1px solid #42617b;border-radius:9px;padding:12px;font:inherit;width:100%}
+.field label{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field.wide{grid-column:1/-1}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.primary,.secondary{border-radius:9px;padding:12px 17px;font-weight:700}.primary{background:var(--lime);border:0;color:#071524}.secondary{background:#12324e;border:1px solid #42617b;color:#fff}
+.table-wrap{overflow-x:auto}.customer-table{border-collapse:collapse;width:100%;min-width:680px}.customer-table th,.customer-table td{padding:13px 11px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}.customer-table th{color:var(--muted);font-weight:650}.customer-table td{overflow-wrap:anywhere}.small-btn{background:#12324e;color:white;border:1px solid #42617b;border-radius:8px;padding:7px 11px}.feedback{margin:12px 0;color:#b5ff83;min-height:20px}.feedback.error{color:var(--danger)}
+@media(max-width:560px){.form-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -42,11 +50,33 @@
           <div class="info"><span>Telefone / WhatsApp</span><strong id="company-phone">—</strong></div>
         </div>
       </div>
-      <div class="notice">Os módulos de agendamentos, serviços, clientes, orçamentos e equipe serão conectados ao banco de dados nas próximas etapas. Nenhum dado fictício será exibido.</div>
+      <div class="notice">O cadastro de clientes está conectado ao banco de dados. Os módulos de agendamentos, serviços, orçamentos e equipe serão conectados nas próximas etapas.</div>
     </section>
     <section id="page-bookings" class="page"><h1>Agendamentos</h1><p class="lead">Organize os horários e atendimentos do seu estabelecimento.</p><div class="card"><div class="empty">Módulo em preparação. A estrutura será conectada ao banco antes de liberar cadastros.</div></div></section>
     <section id="page-services" class="page"><h1>Serviços</h1><p class="lead">Cadastre os serviços de estética automotiva oferecidos pela sua empresa.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
-    <section id="page-customers" class="page"><h1>Clientes</h1><p class="lead">Consulte e organize os clientes do seu estabelecimento.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
+    <section id="page-customers" class="page">
+<h1>Clientes</h1><p class="lead">Cadastre e consulte os clientes do seu estabelecimento.</p>
+<div class="card">
+  <div class="toolbar"><input id="customer-search" type="search" placeholder="Pesquisar por nome, CPF/CNPJ ou telefone" aria-label="Pesquisar clientes"><button class="primary" id="new-customer" type="button">+ Novo cliente</button></div>
+  <div id="customers-feedback" class="feedback" role="status" aria-live="polite"></div>
+  <div id="customers-list" class="table-wrap"><div class="empty">Carregando clientes...</div></div>
+</div>
+<div id="customer-editor" class="card hidden">
+<h2 id="customer-form-title">Cadastrar cliente</h2>
+<form id="customer-form">
+<div class="form-grid">
+<div class="field wide"><label for="customer-name">Nome completo / Razão social *</label><input id="customer-name" required maxlength="200"></div>
+<div class="field"><label for="customer-type">Tipo de pessoa *</label><select id="customer-type"><option value="fisica">Pessoa física</option><option value="juridica">Pessoa jurídica</option></select></div>
+<div class="field"><label for="customer-doc">CPF / CNPJ</label><input id="customer-doc" maxlength="24"></div>
+<div class="field"><label for="customer-phone">Telefone</label><input id="customer-phone" maxlength="30"></div>
+<div class="field"><label for="customer-whatsapp">WhatsApp</label><input id="customer-whatsapp" maxlength="30"></div>
+<div class="field wide"><label for="customer-email">E-mail</label><input id="customer-email" type="email" maxlength="250"></div>
+<div class="field wide"><label for="customer-notes">Observações</label><textarea id="customer-notes" rows="3"></textarea></div>
+</div>
+<div class="actions"><button class="primary" id="customer-save" type="submit">Salvar cliente</button><button class="secondary" id="customer-cancel" type="button">Cancelar</button></div>
+<div id="customer-form-feedback" class="feedback" role="status" aria-live="polite"></div>
+</form></div>
+</section>
     <section id="page-quotes" class="page"><h1>Orçamentos</h1><p class="lead">Prepare e acompanhe orçamentos para seus clientes.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
     <section id="page-team" class="page"><h1>Equipe</h1><p class="lead">Organize os profissionais e os acessos da sua empresa.</p><div class="card"><div class="empty">Módulo em preparação.</div></div></section>
     <section id="page-settings" class="page"><h1>Configurações</h1><p class="lead">Consulte os dados cadastrais vinculados à sua conta.</p><div class="card"><div class="empty">Para proteger o cadastro, alterações cadastrais serão solicitadas ao Administrador Geral nesta primeira versão.</div></div></section>
@@ -59,8 +89,74 @@ import {SUPABASE_URL,SUPABASE_ANON_KEY} from './config.js';
 const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const $=id=>document.getElementById(id);
 const goLogin=()=>location.replace('./login.html');
+let currentCompanyId=null;
+let customerRows=[];
+let editingCustomerId=null;
+let customersLoaded=false;
+const customerField=id=>$(id).value.trim();
+function customerFeedback(text,isError=false,target='customers-feedback'){
+ const el=$(target);el.textContent=text;el.classList.toggle('error',isError);
+}
+function showCustomerForm(customer=null){
+ editingCustomerId=customer?.id||null;
+ $('customer-form-title').textContent=customer?'Editar cliente':'Cadastrar cliente';
+ $('customer-name').value=customer?.nome||'';
+ $('customer-type').value=customer?.tipo_pessoa||'fisica';
+ $('customer-doc').value=customer?.cpf_cnpj||'';
+ $('customer-phone').value=customer?.telefone||'';
+ $('customer-whatsapp').value=customer?.whatsapp||'';
+ $('customer-email').value=customer?.email||'';
+ $('customer-notes').value=customer?.observacoes||'';
+ customerFeedback('',false,'customer-form-feedback');
+ $('customer-editor').classList.remove('hidden');
+ $('customer-name').focus();
+}
+function hideCustomerForm(){editingCustomerId=null;$('customer-editor').classList.add('hidden');}
+function renderCustomers(){
+ const term=$('customer-search').value.trim().toLocaleLowerCase('pt-BR');
+ const rows=customerRows.filter(c=>[c.nome,c.cpf_cnpj,c.telefone,c.whatsapp].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(term)));
+ const container=$('customers-list');container.replaceChildren();
+ if(!rows.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=term?'Nenhum cliente corresponde à pesquisa.':'Nenhum cliente cadastrado nesta empresa.';container.appendChild(empty);return;}
+ const table=document.createElement('table');table.className='customer-table';
+ const head=document.createElement('thead');const tr=document.createElement('tr');
+ ['Nome','Tipo','CPF / CNPJ','Telefone','Ações'].forEach(label=>{const th=document.createElement('th');th.textContent=label;tr.appendChild(th);});head.appendChild(tr);table.appendChild(head);
+ const body=document.createElement('tbody');
+ rows.forEach(c=>{
+  const row=document.createElement('tr');
+  [c.nome,c.tipo_pessoa==='juridica'?'Jurídica':'Física',c.cpf_cnpj||'—',c.telefone||c.whatsapp||'—'].forEach(v=>{const td=document.createElement('td');td.textContent=v;row.appendChild(td);});
+  const td=document.createElement('td');const button=document.createElement('button');button.type='button';button.className='small-btn';button.textContent='Editar';button.addEventListener('click',()=>showCustomerForm(c));td.appendChild(button);row.appendChild(td);body.appendChild(row);
+ });table.appendChild(body);container.appendChild(table);
+}
+async function loadCustomers(){
+ if(!currentCompanyId)return;
+ customerFeedback('Carregando clientes...');
+ const {data,error}=await sb.from('clientes').select('id,nome,tipo_pessoa,cpf_cnpj,telefone,whatsapp,email,observacoes,ativo').eq('empresa_id',currentCompanyId).order('nome',{ascending:true});
+ if(error){console.error('Erro ao consultar clientes:',error);customerFeedback('Não foi possível consultar clientes. Verifique as políticas RLS da tabela clientes.',true);$('customers-list').replaceChildren();return;}
+ customerRows=(data||[]).filter(c=>c.ativo!==false);customersLoaded=true;
+ customerFeedback(`${customerRows.length} cliente(s) encontrado(s).`);renderCustomers();
+}
+$('new-customer').addEventListener('click',()=>showCustomerForm());
+$('customer-cancel').addEventListener('click',hideCustomerForm);
+$('customer-search').addEventListener('input',renderCustomers);
+$('customer-form').addEventListener('submit',async e=>{
+ e.preventDefault();if(!currentCompanyId)return;
+ const button=$('customer-save');button.disabled=true;
+ customerFeedback('Salvando cliente...',false,'customer-form-feedback');
+ const payload={nome:customerField('customer-name'),tipo_pessoa:$('customer-type').value,cpf_cnpj:customerField('customer-doc')||null,telefone:customerField('customer-phone')||null,whatsapp:customerField('customer-whatsapp')||null,email:customerField('customer-email')||null,observacoes:customerField('customer-notes')||null};
+ try{
+  if(!payload.nome)throw new Error('Informe o nome do cliente.');
+  let query;
+  if(editingCustomerId){query=sb.from('clientes').update(payload).eq('id',editingCustomerId).eq('empresa_id',currentCompanyId).select('id');}
+  else{query=sb.from('clientes').insert({...payload,empresa_id:currentCompanyId,ativo:true}).select('id');}
+  const {data,error}=await query;
+  if(error)throw error;
+  if(!data?.length)throw new Error('A operação não foi confirmada. Verifique as permissões de gravação.');
+  hideCustomerForm();await loadCustomers();customerFeedback('Cliente salvo com sucesso.');
+ }catch(err){console.error('Erro ao salvar cliente:',err);customerFeedback('Não foi possível salvar: '+(err.message||'erro desconhecido'),true,'customer-form-feedback');}
+ finally{button.disabled=false;}
+});
 function showError(message){$('loading').innerHTML='';const p=document.createElement('p');p.className='error';p.textContent=message;$('loading').appendChild(p);}
-function showPage(page){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));}
+function showPage(page){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));if(page==='customers'&&!customersLoaded)loadCustomers();}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('logout').addEventListener('click',async()=>{await sb.auth.signOut();goLogin();});
 async function init(){
@@ -74,6 +170,7 @@ async function init(){
   if(companyError){console.error(companyError);showError('Não foi possível carregar os dados. Verifique as permissões de acesso (RLS) da tabela empresas.');return;}
   if(!company){showError('Nenhum estabelecimento foi encontrado para sua conta. Solicite a vinculação ao Administrador Geral.');return;}
   if(company.status!=='ativo'){showError('O acesso deste estabelecimento está suspenso. Entre em contato com o Administrador Geral.');await sb.auth.signOut();return;}
+  currentCompanyId=company.id;
   $('header-company').textContent=company.nome||'Meu estabelecimento';
   $('company-name').textContent=company.nome||'—';$('company-owner').textContent=company.responsavel||'—';$('company-email').textContent=company.email||'—';$('company-phone').textContent=company.telefone||'—';
   $('plan-value').textContent=company.plano==='profissional'?'Profissional':'Essencial';
