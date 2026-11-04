@@ -42,21 +42,33 @@
   <header><div><strong id="header-company">Meu estabelecimento</strong><small>Ambiente exclusivo da sua empresa</small></div><button class="logout" id="logout">Sair da conta</button></header>
   <div class="content">
     <section id="page-overview" class="page active">
-      <h1>Visão geral</h1><p class="lead">Bem-vindo ao ambiente de gestão do seu estabelecimento.</p>
-      <div class="cards">
-        <div class="stat"><span>Plano contratado</span><strong id="plan-value">—</strong></div>
-        <div class="stat"><span>Situação da assinatura</span><strong id="status-value">—</strong></div>
-        <div class="stat"><span>Acesso</span><strong>Individual</strong></div>
+      <h1>Visão geral</h1><p class="lead">Acompanhe os principais indicadores e os próximos atendimentos do seu estabelecimento.</p>
+      <div class="module-grid overview-kpis">
+        <div class="stat"><span>Agendamentos hoje</span><strong id="ov-today">—</strong></div>
+        <div class="stat"><span>Agendamentos futuros</span><strong id="ov-upcoming">—</strong></div>
+        <div class="stat"><span>Clientes ativos</span><strong id="ov-customers">—</strong></div>
+        <div class="stat"><span>Veículos ativos</span><strong id="ov-vehicles">—</strong></div>
+        <div class="stat"><span>Serviços ativos</span><strong id="ov-services">—</strong></div>
+        <div class="stat"><span>Orçamentos em aberto</span><strong id="ov-quotes">—</strong></div>
+        <div class="stat"><span>Orçamentos aprovados</span><strong id="ov-approved">—</strong></div>
+        <div class="stat"><span>Profissionais ativos</span><strong id="ov-team">—</strong></div>
       </div>
-      <div class="card"><h2>Dados do estabelecimento</h2><p class="muted">Informações cadastradas pelo Administrador Geral do DetailGest.</p>
+      <div class="card">
+        <div class="form-heading"><h2>Próximos atendimentos</h2><button type="button" class="secondary" id="ov-refresh">Atualizar indicadores</button></div>
+        <p class="muted">Agendamentos a partir de agora, exceto cancelados.</p>
+        <div id="ov-appointments" class="table-wrap"><div class="empty">Carregando atendimentos...</div></div>
+        <p id="ov-feedback" class="feedback" role="status"></p>
+      </div>
+      <div class="card"><h2>Dados do estabelecimento</h2>
         <div class="info-grid">
           <div class="info"><span>Nome do estabelecimento</span><strong id="company-name">—</strong></div>
           <div class="info"><span>Responsável</span><strong id="company-owner">—</strong></div>
+          <div class="info"><span>Plano contratado</span><strong id="plan-value">—</strong></div>
+          <div class="info"><span>Situação da assinatura</span><strong id="status-value">—</strong></div>
           <div class="info"><span>E-mail de contato</span><strong id="company-email">—</strong></div>
           <div class="info"><span>Telefone / WhatsApp</span><strong id="company-phone">—</strong></div>
         </div>
       </div>
-      <div class="notice">Clientes, veículos, serviços e agendamentos utilizam o Supabase. Orçamentos e equipe exigem a instalação das tabelas adicionais fornecidas junto com este arquivo.</div>
     </section>
 
     <section id="page-bookings" class="page"><h1>Agendamentos</h1><p class="lead">Organize os horários e atendimentos do estabelecimento.</p>
@@ -361,8 +373,52 @@ $('settings-logo-url').addEventListener('change',settingsLogoPreview);
 $('settings-reset').addEventListener('click',()=>{fillSettings(settingsSnapshot);settingsMessage('Alterações não salvas descartadas.')});
 $('settings-form').addEventListener('submit',async e=>{e.preventDefault();if(!settingsLoaded||!currentCompanyId){settingsMessage('Carregue as configurações antes de salvar.',true);return}const btn=$('settings-save');btn.disabled=true;try{const payload={empresa_id:currentCompanyId};for(const [col,id] of Object.entries(settingsFields))payload[col]=$(id).value.trim()||null;if(payload.uf&&!/^[a-zA-Z]{2}$/.test(payload.uf))throw Error('Informe uma UF válida com duas letras.');if(payload.uf)payload.uf=payload.uf.toUpperCase();if(payload.logo_url){let u;try{u=new URL(payload.logo_url)}catch{throw Error('Informe uma URL válida para o logotipo.')}if(u.protocol!=='https:')throw Error('O link do logotipo deve começar com https://.')}const {data,error}=await sb.from('empresa_configuracoes').upsert(payload,{onConflict:'empresa_id'}).select('empresa_id');if(error||!data?.length)throw Error(error?.message||'Gravação não confirmada.');fillSettings(payload);settingsMessage('Configurações salvas com sucesso.')}catch(err){settingsMessage('Não foi possível salvar: '+err.message,true)}finally{btn.disabled=false}});
 
+// Painel de indicadores: consultas limitadas à empresa autenticada.
+let overviewLoading=false;
+async function loadOverview(){
+ if(!currentCompanyId||overviewLoading)return;
+ overviewLoading=true;
+ const feedback=$('ov-feedback');feedback.textContent='Atualizando indicadores...';feedback.classList.remove('error');
+ const countQuery=(table,configure)=>{let q=sb.from(table).select('id',{count:'exact',head:true}).eq('empresa_id',currentCompanyId);return configure?configure(q):q};
+ const start=new Date();const todayStart=new Date(start.getFullYear(),start.getMonth(),start.getDate());const tomorrow=new Date(todayStart);tomorrow.setDate(tomorrow.getDate()+1);
+ const jobs=[
+  ['ov-today',countQuery('agendamentos',q=>q.gte('inicio',todayStart.toISOString()).lt('inicio',tomorrow.toISOString()).neq('status','cancelado'))],
+  ['ov-upcoming',countQuery('agendamentos',q=>q.gte('inicio',start.toISOString()).neq('status','cancelado'))],
+  ['ov-customers',countQuery('clientes',q=>q.eq('ativo',true))],
+  ['ov-vehicles',countQuery('veiculos',q=>q.eq('ativo',true))],
+  ['ov-services',countQuery('servicos',q=>q.eq('ativo',true))],
+  ['ov-quotes',countQuery('orcamentos',q=>q.in('status',['rascunho','enviado']))],
+  ['ov-approved',countQuery('orcamentos',q=>q.eq('status','aprovado'))],
+  ['ov-team',countQuery('equipe',q=>q.eq('ativo',true))]
+ ];
+ try{
+  const results=await Promise.allSettled([...jobs.map(j=>j[1]),sb.from('agendamentos').select('id,cliente_id,veiculo_id,servico_id,inicio,status').eq('empresa_id',currentCompanyId).gte('inicio',start.toISOString()).neq('status','cancelado').order('inicio',{ascending:true}).limit(6)]);
+  let errors=0;
+  jobs.forEach(([id],i)=>{const r=results[i];if(r.status==='fulfilled'&&!r.value.error){$(id).textContent=String(r.value.count??0)}else{$(id).textContent='—';errors++}});
+  const ap=results[jobs.length],box=$('ov-appointments');box.replaceChildren();
+  if(ap.status!=='fulfilled'||ap.value.error){const el=document.createElement('div');el.className='empty';el.textContent='Não foi possível consultar os próximos atendimentos.';box.append(el);errors++}
+  else if(!ap.value.data?.length){const el=document.createElement('div');el.className='empty';el.textContent='Nenhum atendimento futuro encontrado.';box.append(el)}
+  else{
+   const bookings=ap.value.data;
+   const ids=(key)=>[...new Set(bookings.map(b=>b[key]).filter(Boolean))];
+   const [cs,vs,ss]=await Promise.all([
+    sb.from('clientes').select('id,nome').eq('empresa_id',currentCompanyId).in('id',ids('cliente_id')),
+    sb.from('veiculos').select('id,placa,marca,modelo').eq('empresa_id',currentCompanyId).in('id',ids('veiculo_id')),
+    ids('servico_id').length?sb.from('servicos').select('id,nome').eq('empresa_id',currentCompanyId).in('id',ids('servico_id')):Promise.resolve({data:[]})
+   ]);
+   const cm=new Map((cs.data||[]).map(x=>[x.id,x.nome]));const vm=new Map((vs.data||[]).map(x=>[x.id,[x.placa,x.marca,x.modelo].filter(Boolean).join(' • ')]));const sm=new Map((ss.data||[]).map(x=>[x.id,x.nome]));
+   const table=document.createElement('table');table.className='module-table';const thead=document.createElement('thead');const tr=document.createElement('tr');['Data e horário','Cliente','Veículo','Serviço','Situação'].forEach(t=>{const th=document.createElement('th');th.textContent=t;tr.append(th)});thead.append(tr);table.append(thead);const tbody=document.createElement('tbody');
+   bookings.forEach(b=>{const row=document.createElement('tr');[new Date(b.inicio).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}),cm.get(b.cliente_id)||'—',vm.get(b.veiculo_id)||'—',sm.get(b.servico_id)||'—',b.status||'—'].forEach(t=>{const td=document.createElement('td');td.textContent=t;row.append(td)});tbody.append(row)});table.append(tbody);box.append(table);
+   if(cs.error||vs.error||ss.error)errors++;
+  }
+  feedback.textContent=errors?'Alguns indicadores não puderam ser carregados. Confira as permissões das tabelas.':'Indicadores atualizados.';feedback.classList.toggle('error',!!errors);
+ }catch(err){console.error('Visão geral:',err);feedback.textContent='Falha ao atualizar a visão geral: '+err.message;feedback.classList.add('error')}
+ finally{overviewLoading=false}
+}
+$('ov-refresh').addEventListener('click',loadOverview);
+
 function showError(message){$('loading').innerHTML='';const p=document.createElement('p');p.className='error';p.textContent=message;$('loading').appendChild(p);}
-function showPage(page){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));if(page==='customers'&&!customersLoaded)loadCustomers();if(page==='vehicles'){(async()=>{if(!customersLoaded)await loadCustomers();if(!vehiclesLoaded)await loadVehicles();else renderVehicles();})();}if(page==='settings')loadSettings();if(['services','bookings','quotes','team'].includes(page)){(async()=>{try{if(page==='services')await loadServices();else if(page==='team')await loadTeam();else if(page==='quotes'){await ensureRelations({services:true});await loadQuotes()}else{await ensureRelations({services:true});await loadBookings()}}catch(err){console.error(err);notify(({services:'service',bookings:'booking',quotes:'quote',team:'team'})[page]+'-feedback',err.message,true)}})()}}
+function showPage(page){if(page==='overview')loadOverview();document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+page));if(page==='customers'&&!customersLoaded)loadCustomers();if(page==='vehicles'){(async()=>{if(!customersLoaded)await loadCustomers();if(!vehiclesLoaded)await loadVehicles();else renderVehicles();})();}if(page==='settings')loadSettings();if(['services','bookings','quotes','team'].includes(page)){(async()=>{try{if(page==='services')await loadServices();else if(page==='team')await loadTeam();else if(page==='quotes'){await ensureRelations({services:true});await loadQuotes()}else{await ensureRelations({services:true});await loadBookings()}}catch(err){console.error(err);notify(({services:'service',bookings:'booking',quotes:'quote',team:'team'})[page]+'-feedback',err.message,true)}})()}}
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('logout').addEventListener('click',async()=>{await sb.auth.signOut();goLogin();});
 async function init(){
@@ -381,7 +437,7 @@ async function init(){
   $('company-name').textContent=company.nome||'—';$('company-owner').textContent=company.responsavel||'—';$('company-email').textContent=company.email||'—';$('company-phone').textContent=company.telefone||'—';
   $('plan-value').textContent=company.plano==='profissional'?'Profissional':'Essencial';
   $('status-value').innerHTML='';const badge=document.createElement('span');badge.className='pill'+(company.status==='ativo'?'':' suspended');badge.textContent=company.status==='ativo'?'Ativo':'Suspenso';$('status-value').appendChild(badge);
-  $('loading').classList.add('hidden');$('app').classList.remove('hidden');
+  $('loading').classList.add('hidden');$('app').classList.remove('hidden');loadOverview();
  }catch(err){console.error('Falha ao iniciar painel da empresa:',err);showError('Ocorreu um erro ao carregar o painel. Atualize a página e tente novamente.');}
 }
 init();
